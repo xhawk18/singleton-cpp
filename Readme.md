@@ -2,9 +2,10 @@
 
 Features --
 
-1. Works for both dynamical library and executable.
+1. Share the same singleton instance in dynamical library and executable.
 2. Multithread safe
-3. Lazy consturction
+3. Lazy construction
+4. Lock-free with double checked mutex on initialization.
 
 ## Usage
 
@@ -21,5 +22,7 @@ public:
 2. use the singleton instance
 
 ```
-    MyObject &obj = singleton<MyObject>();
+#include "singleton-cpp/singleton.h"
+
+MyObject &obj = singleton<MyObject>();
 ```
