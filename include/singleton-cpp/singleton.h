@@ -2,6 +2,7 @@
 #ifndef INC_SINGLETON_H_
 #define INC_SINGLETON_H_
 
+#include <cstdlib>
 #include <mutex>
 #include <typeindex>
 #include <memory>
@@ -44,15 +45,15 @@ public:
 private:
     // Get the single instance
     static T *getInstancePrivate() {
-        static T *instance = nullptr;
-        if (instance != nullptr)
+        static T *instance = NULL;
+        if (instance != NULL)
             return instance;
 
-        SingleTonHolder *singleTonHolder = nullptr;
+        SingleTonHolder *singleTonHolder = NULL;
         {
             // Locks and get the global mutex
             std::lock_guard<std::mutex> myLock(getSingleTonMutex());
-            if (instance != nullptr)
+            if (instance != NULL)
                 return instance;
 
             singleTonHolder = getSingleTonType(std::type_index(typeid(T)));
@@ -72,7 +73,7 @@ private:
     static T *createInstanceFromHolder(SingleTonHolder *singleTonHolder) {
         // Locks class T and make sure to call construction only once
         std::lock_guard<std::mutex> myLock(*singleTonHolder->mutex_);
-        if (singleTonHolder->object_ == nullptr) {
+        if (singleTonHolder->object_ == NULL) {
             // construct the instance with static funciton
             singleTonHolder->object_ = reinterpret_cast<void *>(getStaticInstance());
         }

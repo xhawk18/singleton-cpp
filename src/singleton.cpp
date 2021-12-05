@@ -15,15 +15,19 @@ SINGLETON_API SingleTonHolder *getSingleTonType(const std::type_index &typeIndex
     static std::unordered_map<std::type_index, SingleTonHolder> s_singleObjects;
 
     // Check the old value
-    auto itr = s_singleObjects.find(typeIndex);
+    std::unordered_map<std::type_index, SingleTonHolder>::iterator itr = s_singleObjects.find(typeIndex);
     if (itr != s_singleObjects.end())
         return &itr->second;
 
     // Create new one if no old value
-    std::pair<std::type_index, SingleTonHolder> singleHolder {
+    std::pair<std::type_index, SingleTonHolder> singleHolder( 
         typeIndex,
-        SingleTonHolder{nullptr, std::shared_ptr<std::mutex>(new std::mutex())}
-    };
+        SingleTonHolder()
+    );
     itr = s_singleObjects.insert(singleHolder).first;
-    return &itr->second;
+    SingleTonHolder &singleTonHolder = itr->second;
+    singleTonHolder.object_ = NULL;
+    singleTonHolder.mutex_ = std::shared_ptr<std::mutex>(new std::mutex());
+
+    return &singleTonHolder;
 }
