@@ -15,23 +15,9 @@
 //   2. Multithread safe
 //   3. Lazy consturction
 
-template<typename T>
-class Singleton;
-
-// Get singleton instance
-template<typename T>
-inline T &singleton() {
-    return Singleton<T>::getInstance();
-}
-
-
-struct SingleTonHolder {
-    void *object_;
-    std::shared_ptr<std::mutex> mutex_;
-};
-
-SINGLETON_API std::mutex &getSingleTonMutex();
-SINGLETON_API SingleTonHolder *getSingleTonType(const std::type_index &typeIndex);
+SINGLETON_API void getSharedInstance(const std::type_index &typeIndex, 
+                                     void *(*getStaticInstance)(),
+                                     void *&instance);
 
 
 template<typename T>
@@ -39,52 +25,24 @@ class Singleton {
 public:
     // Get the single instance
     static T &getInstance() {
-        return *getInstancePrivate();
+        static void *instance = NULL;
+        if (instance == NULL)
+            getSharedInstance(typeid(T), &getStaticInstance, instance);
+        return *reinterpret_cast<T *>(instance);
     }
 
 private:
-    // Get the single instance
-    static T *getInstancePrivate() {
-        static T *instance = NULL;
-        if (instance != NULL)
-            return instance;
-
-        SingleTonHolder *singleTonHolder = NULL;
-        {
-            // Locks and get the global mutex
-            std::lock_guard<std::mutex> myLock(getSingleTonMutex());
-            if (instance != NULL)
-                return instance;
-
-            singleTonHolder = getSingleTonType(std::type_index(typeid(T)));
-        }
-
-        // Create single instance
-        T *instanceFromHolder = createInstanceFromHolder(singleTonHolder);
-
-        {
-            // Save single instance object
-            std::lock_guard<std::mutex> myLock(getSingleTonMutex());
-            instance = instanceFromHolder;
-            return instance;
-        }
-    }
-
-    static T *createInstanceFromHolder(SingleTonHolder *singleTonHolder) {
-        // Locks class T and make sure to call construction only once
-        std::lock_guard<std::mutex> myLock(*singleTonHolder->mutex_);
-        if (singleTonHolder->object_ == NULL) {
-            // construct the instance with static funciton
-            singleTonHolder->object_ = reinterpret_cast<void *>(getStaticInstance());
-        }
-        return reinterpret_cast<T *>(singleTonHolder->object_);
-    }
-
-    static T *getStaticInstance() {
+    static void *getStaticInstance() {
         static T t;
-        return &t;
+        return reinterpret_cast<void *>(&reinterpret_cast<char &>(t));
     }
 };
+
+// Get singleton instance
+template<typename T>
+inline T &singleton() {
+    return Singleton<T>::getInstance();
+}
 
 
 #endif
