@@ -1,4 +1,4 @@
-## cpp singleton that works across dll/exe boundary.
+## cpp singleton that works across dll/exe boundaries.
 
 Features --
 
